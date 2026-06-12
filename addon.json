@@ -1,0 +1,20 @@
+{
+  "description": "OpenStreetMap (slippy-map) tile renderer. Node-agnostic core + RectNode wrapper with pan/zoom/pins. Backed by tcxCurl.",
+  "author": "tettou771",
+  "license": "MIT",
+  "category": "graphics",
+  "screenshot": "docs/preview.png",
+  "platforms": ["macos", "windows", "linux"],
+  "keywords": [
+    "map",
+    "openstreetmap",
+    "osm",
+    "slippy",
+    "tile",
+    "geo",
+    "gps"
+  ],
+  "dependencies": [
+    "tcxCurl"
+  ]
+}
