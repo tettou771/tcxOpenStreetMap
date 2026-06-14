@@ -122,8 +122,10 @@ std::vector<GeocodingResult> NominatimClient::search(const std::string& query, i
     return out;
 }
 
-GeocodingResult NominatimClient::reverse(LatLon p) {
+GeocodingResult NominatimClient::reverse(LatLon p, int zoom) {
     waitForRateLimit();
+    if (zoom < 0)  zoom = 0;
+    if (zoom > 18) zoom = 18;
 
     char latBuf[32], lonBuf[32];
     std::snprintf(latBuf, sizeof(latBuf), "%.7f", p.lat);
@@ -131,6 +133,7 @@ GeocodingResult NominatimClient::reverse(LatLon p) {
     std::string url = server_
         + "/reverse?lat=" + latBuf
         + "&lon=" + lonBuf
+        + "&zoom=" + std::to_string(zoom)
         + "&format=json&addressdetails=0";
 
     HttpClient client;
@@ -159,9 +162,10 @@ void NominatimClient::searchAsync(const std::string& query,
 }
 
 void NominatimClient::reverseAsync(LatLon p,
-                                   std::function<void(GeocodingResult)> cb) {
-    std::thread([this, p, cb = std::move(cb)]() {
-        auto r = reverse(p);
+                                   std::function<void(GeocodingResult)> cb,
+                                   int zoom) {
+    std::thread([this, p, cb = std::move(cb), zoom]() {
+        auto r = reverse(p, zoom);
         if (cb) cb(std::move(r));
     }).detach();
 }

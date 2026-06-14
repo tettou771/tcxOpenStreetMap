@@ -106,6 +106,14 @@ public:
     }
     float zoomSnapThreshold() const { return zoomSnap_; }
 
+    // Prefetch the viewport's tiles at the neighbouring integer zooms (z-1
+    // and z+1) so a zoom gesture lands on real imagery instead of the
+    // stretched-parent fallback. Off by default: z+1 alone is ~4 tiles per
+    // visible tile, which is real load against the public OSM server. Visible
+    // tiles always jump ahead of prefetches in the download queue.
+    MapView& setPrefetchNeighborZooms(bool on) { prefetchNeighbors_ = on; return *this; }
+    bool prefetchNeighborZooms() const { return prefetchNeighbors_; }
+
     // ----------------------------------------------------------------- pump
     // Must run once per frame so worker-thread tile loads land in the texture
     // cache and a new worker spins up if anything's queued.
@@ -139,6 +147,7 @@ private:
     std::string tileCacheDir_;       // populated to defaultTileCacheDir() in ctor
     int   maxMemoryTiles_ = 256;
     float zoomSnap_       = 0.5f;
+    bool  prefetchNeighbors_ = false;
 
     std::unordered_map<TileKey, tc::Texture, TileKeyHash> tileCache_;
     std::unordered_map<TileKey, int,         TileKeyHash> tileFailed_;     // retry counter
@@ -149,7 +158,8 @@ private:
     };
 
     mutable std::mutex          tileMutex_;
-    std::deque<TileKey>         tileQueue_;
+    std::deque<TileKey>         tileQueue_;       // visible tiles — served first
+    std::deque<TileKey>         prefetchQueue_;   // neighbour-zoom warmup
     std::unordered_set<TileKey, TileKeyHash> tileLoading_;
     std::vector<TileResult>     tileResults_;
 
@@ -157,7 +167,8 @@ private:
     std::atomic<bool> tileThreadStop_{false};
     std::thread tileThread_;
 
-    void requestTile(TileKey key);
+    void requestTile(TileKey key, bool prefetch = false);
+    void prefetchZoomLevel(int z);
     void startTileThread();
     void evictOldTiles();
 

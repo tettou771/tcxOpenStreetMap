@@ -145,10 +145,10 @@ void MapView::update() {
     }
 
     // Restart the worker if there's queued work and the previous worker
-    // already exited (it self-terminates when the queue drains).
+    // already exited (it self-terminates when the queues drain).
     if (!tileThreadRunning_ && !tileThreadStop_) {
         std::lock_guard<std::mutex> lk(tileMutex_);
-        if (!tileQueue_.empty()) {
+        if (!tileQueue_.empty() || !prefetchQueue_.empty()) {
             tileThreadRunning_ = true;
             startTileThread();
         }
@@ -263,11 +263,39 @@ void MapView::drawTiles() {
             requestTile(key);
         }
     }
+
+    if (prefetchNeighbors_) {
+        if (intZoom + 1 <= maxZoom_) prefetchZoomLevel(intZoom + 1);
+        if (intZoom - 1 >= minZoom_) prefetchZoomLevel(intZoom - 1);
+    }
+}
+
+void MapView::prefetchZoomLevel(int z) {
+    // Same viewport coverage math as drawTiles(), at integer zoom z.
+    double tileScale = std::pow(2.0, zoom_ - z);
+    WorldPixel center = latLonToWorldPixel({centerLat_, centerLon_}, z);
+    double half_w = sizeW_ * 0.5 / tileScale;
+    double half_h = sizeH_ * 0.5 / tileScale;
+
+    int maxTile = (1 << z);
+    int minTX = std::max(0, (int)std::floor((center.x - half_w) / TILE_SIZE_PX));
+    int maxTX = std::min(maxTile - 1, (int)std::floor((center.x + half_w) / TILE_SIZE_PX));
+    int minTY = std::max(0, (int)std::floor((center.y - half_h) / TILE_SIZE_PX));
+    int maxTY = std::min(maxTile - 1, (int)std::floor((center.y + half_h) / TILE_SIZE_PX));
+
+    // Bound the burst — a huge window at z+1 can cover hundreds of tiles, and
+    // a warmup that large defeats its own purpose (and hammers the server).
+    int count = (maxTX - minTX + 1) * (maxTY - minTY + 1);
+    if (count > 64) return;
+
+    for (int ty = minTY; ty <= maxTY; ty++)
+        for (int tx = minTX; tx <= maxTX; tx++)
+            requestTile({z, tx, ty}, /*prefetch=*/true);
 }
 
 // ------------------------------------------------------------ tile worker
 
-void MapView::requestTile(TileKey key) {
+void MapView::requestTile(TileKey key, bool prefetch) {
     if (tileCache_.count(key)) return;
 
     auto fit = tileFailed_.find(key);
@@ -278,8 +306,10 @@ void MapView::requestTile(TileKey key) {
         if (!tileLoading_.insert(key).second) return;     // already queued / loading
     }
 
-    // Disk cache hit — load synchronously, no HTTP.
-    if (!tileCacheDir_.empty()) {
+    // Disk cache hit — load synchronously, no HTTP. Visible tiles only: a
+    // prefetch is invisible by definition, so its disk I/O + PNG decode go to
+    // the worker instead of stalling the frame.
+    if (!prefetch && !tileCacheDir_.empty()) {
         std::string cachePath = tileCacheDir_ + "/" + std::to_string(key.z)
                               + "/" + std::to_string(key.x)
                               + "/" + std::to_string(key.y) + ".png";
@@ -299,7 +329,7 @@ void MapView::requestTile(TileKey key) {
 
     {
         std::lock_guard<std::mutex> lk(tileMutex_);
-        tileQueue_.push_back(key);
+        (prefetch ? prefetchQueue_ : tileQueue_).push_back(key);
     }
     if (!tileThreadRunning_) {
         tileThreadRunning_ = true;
@@ -313,39 +343,57 @@ void MapView::startTileThread() {
     tileThread_ = std::thread([this]() {
         while (!tileThreadStop_) {
             TileKey req{};
-            bool got = false;
             {
                 std::lock_guard<std::mutex> lk(tileMutex_);
-                if (tileQueue_.empty()) break;
-                req = tileQueue_.front();
-                tileQueue_.pop_front();
-                got = true;
+                if (!tileQueue_.empty()) {
+                    req = tileQueue_.front();
+                    tileQueue_.pop_front();
+                } else if (!prefetchQueue_.empty()) {
+                    req = prefetchQueue_.front();
+                    prefetchQueue_.pop_front();
+                } else {
+                    break;
+                }
             }
-            if (!got) break;
 
-            std::string url = provider_ ? provider_->urlFor(req) : std::string{};
-            std::string ua  = provider_ ? provider_->userAgent() : std::string{"tcxOpenStreetMap/0.1"};
-
+            // Disk first. Visible tiles already checked synchronously before
+            // queueing, so this only really fires for prefetches — but it's a
+            // single cheap stat() for the others.
             Pixels px;
-            if (!url.empty()) {
-                tcx::HttpClient client;
-                client.addHeader("User-Agent", ua);
-                client.setBaseUrl("");
-                auto res = client.get(url);
-                if (res.ok() && !res.body.empty()) {
-                    px.loadFromMemory(
-                        (const unsigned char*)res.body.data(),
-                        (int)res.body.size());
+            bool fromDisk = false;
+            if (!tileCacheDir_.empty()) {
+                std::string cachePath = tileCacheDir_ + "/" + std::to_string(req.z)
+                                      + "/" + std::to_string(req.x)
+                                      + "/" + std::to_string(req.y) + ".png";
+                std::error_code ec;
+                if (fs::exists(cachePath, ec) && px.load(cachePath)) {
+                    fromDisk = true;
+                }
+            }
 
-                    if (!tileCacheDir_.empty()) {
-                        std::string dir = tileCacheDir_
-                                        + "/" + std::to_string(req.z)
-                                        + "/" + std::to_string(req.x);
-                        std::error_code ec;
-                        fs::create_directories(dir, ec);
-                        std::string cachePath = dir + "/" + std::to_string(req.y) + ".png";
-                        std::ofstream f(cachePath, std::ios::binary);
-                        if (f) f.write(res.body.data(), res.body.size());
+            if (!fromDisk) {
+                std::string url = provider_ ? provider_->urlFor(req) : std::string{};
+                std::string ua  = provider_ ? provider_->userAgent() : std::string{"tcxOpenStreetMap/0.1"};
+                if (!url.empty()) {
+                    tcx::HttpClient client;
+                    client.addHeader("User-Agent", ua);
+                    client.setBaseUrl("");
+                    auto res = client.get(url);
+                    if (res.ok() && !res.body.empty()) {
+                        px.loadFromMemory(
+                            (const unsigned char*)res.body.data(),
+                            (int)res.body.size());
+
+                        if (!tileCacheDir_.empty()) {
+                            std::string dir = tileCacheDir_
+                                            + "/" + std::to_string(req.z)
+                                            + "/" + std::to_string(req.x);
+                            std::error_code ec;
+                            fs::create_directories(dir, ec);
+                            std::string cachePath = dir + "/" + std::to_string(req.y) + ".png";
+                            std::ofstream f(cachePath, std::ios::binary);
+                            if (f) f.write(res.body.data(), res.body.size());
+                        }
                     }
                 }
             }
@@ -355,8 +403,11 @@ void MapView::startTileThread() {
                 tileResults_.push_back({req, std::move(px)});
             }
             // Polite throttle — keeps us under OSM's recommended request rate
-            // and avoids spinning when the queue is very long.
-            std::this_thread::sleep_for(std::chrono::milliseconds(100));
+            // and avoids spinning when the queue is very long. Disk hits cost
+            // the server nothing, so they skip it.
+            if (!fromDisk) {
+                std::this_thread::sleep_for(std::chrono::milliseconds(100));
+            }
         }
         tileThreadRunning_ = false;
     });

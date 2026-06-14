@@ -53,8 +53,10 @@ public:
 
     // ----------------------------------------------------------- sync API
     // Blocks the calling thread (waits on HTTP). Honours the throttle.
+    // reverse(): `zoom` picks the address granularity Nominatim answers with
+    // (0 = country … 10 = city … 14 = neighbourhood … 18 = building).
     std::vector<GeocodingResult> search (const std::string& query, int limit = 1);
-    GeocodingResult              reverse(LatLon point);
+    GeocodingResult              reverse(LatLon point, int zoom = 18);
 
     // ---------------------------------------------------------- async API
     // Spawns a detached worker. Callback fires on that worker — marshal back
@@ -63,7 +65,8 @@ public:
                       std::function<void(std::vector<GeocodingResult>)> cb,
                       int limit = 1);
     void reverseAsync(LatLon point,
-                      std::function<void(GeocodingResult)> cb);
+                      std::function<void(GeocodingResult)> cb,
+                      int zoom = 18);
 
     // ---------------------------------------------------------- helpers
     // Compute the fractional zoom at which the result's bounding box fits a
