@@ -13,6 +13,7 @@
 // =============================================================================
 
 #include "tcxMapView.h"
+#include "tcxTrackLayer.h"
 
 #include <TrussC.h>     // RectNode, MouseEventArgs, EventListener
 #include <memory>
@@ -49,6 +50,13 @@ public:
     LatLon pinPos(std::shared_ptr<tc::RectNode> pinNode) const;
     void   movePin(std::shared_ptr<tc::RectNode> pinNode, LatLon newPos);
 
+    // -------------------------------------------------------------- tracks
+    // TrackLayers (tcxTrackLayer.h) drawn between the tiles and the pins.
+    // The layer object stays yours — restyle it (setColor/setWidth) anytime.
+    void addTrack(TrackLayer::Ptr track);
+    void removeTrack(TrackLayer::Ptr track);
+    void clearTracks();
+
     // ---------------------------------------------------------------- node
     void setup() override;
     void update() override;
@@ -67,6 +75,7 @@ private:
         std::shared_ptr<tc::RectNode> node;
     };
     std::vector<PinEntry> pins_;
+    std::vector<TrackLayer::Ptr> tracks_;
     bool   pinAnchorTopLeft_ = false;
 
     // Drag state.

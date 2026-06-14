@@ -1,29 +1,20 @@
 #pragma once
 
 // =============================================================================
-// tcxOpenStreetMapTypes.h - geographic + tile-coordinate basics
+// tcxOpenStreetMapTypes.h - tile-coordinate basics + Web Mercator projection
 // =============================================================================
-// Pulled into its own header so anyone using `tcx::LatLon` and the Web Mercator
-// projection helpers doesn't have to drag in the whole MapView interface.
+// Pulled into its own header so anyone using the Web Mercator projection
+// helpers doesn't have to drag in the whole MapView interface. The LatLon
+// coordinate type itself lives in tcxGeo (shared across geo addons).
 // =============================================================================
+
+#include <tcxLatLon.h>   // tcx::LatLon (from the tcxGeo addon)
 
 #include <cmath>
 #include <cstddef>
 #include <cstdint>
 
 namespace tcx {
-
-// -----------------------------------------------------------------------------
-// LatLon — a pair of degrees, WGS84.
-//   lat in [-90, 90] (positive = north), lon in [-180, 180] (positive = east).
-// -----------------------------------------------------------------------------
-struct LatLon {
-    double lat = 0;
-    double lon = 0;
-
-    bool operator==(const LatLon& o) const { return lat == o.lat && lon == o.lon; }
-    bool operator!=(const LatLon& o) const { return !(*this == o); }
-};
 
 // -----------------------------------------------------------------------------
 // TileKey — identifies one slippy-map tile (z = zoom level, x/y = tile index

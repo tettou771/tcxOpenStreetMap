@@ -19,8 +19,11 @@
 // default — to point at different tile servers / Mapbox / your own.
 // =============================================================================
 
-#include "tcxOpenStreetMapTypes.h"   // LatLon, TileKey, projection helpers
+#include <tcxGeo.h>                  // LatLon, distance/bearing, GPX (tcxGeo addon)
+
+#include "tcxOpenStreetMapTypes.h"   // TileKey, Web Mercator projection helpers
 #include "tcxTileProvider.h"         // OSMTileProvider, UrlTemplateTileProvider
 #include "tcxMapView.h"              // MapView
 #include "tcxMapViewNode.h"          // MapViewNode
 #include "tcxNominatim.h"            // NominatimClient, GeocodingResult
+#include "tcxTrackLayer.h"           // TrackLayer

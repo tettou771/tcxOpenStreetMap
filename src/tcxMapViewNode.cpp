@@ -31,6 +31,9 @@ void MapViewNode::update() {
 
 void MapViewNode::draw() {
     map_.drawTiles();
+    for (auto& t : tracks_) {
+        if (t) t->draw(map_);
+    }
     // Pins draw themselves via the Node hierarchy — they're children of this
     // node, positioned by layoutPins() each frame.
 }
@@ -67,6 +70,22 @@ void MapViewNode::movePin(std::shared_ptr<RectNode> pinNode, LatLon newPos) {
     for (auto& p : pins_) {
         if (p.node == pinNode) { p.pos = newPos; return; }
     }
+}
+
+// ----------------------------------------------------------------- tracks
+
+void MapViewNode::addTrack(TrackLayer::Ptr track) {
+    if (track) tracks_.push_back(std::move(track));
+}
+
+void MapViewNode::removeTrack(TrackLayer::Ptr track) {
+    for (auto it = tracks_.begin(); it != tracks_.end(); ++it) {
+        if (*it == track) { tracks_.erase(it); return; }
+    }
+}
+
+void MapViewNode::clearTracks() {
+    tracks_.clear();
 }
 
 void MapViewNode::layoutPins() {

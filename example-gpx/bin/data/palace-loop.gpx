@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Synthetic walk around the Imperial Palace moat, Tokyo. Hand-authored
+     sample data for example-gpx (not a real recording). MIT, same as the
+     addon. -->
+<gpx version="1.1" creator="tcxOpenStreetMap example" xmlns="http://www.topografix.com/GPX/1/1">
+  <wpt lat="35.6790" lon="139.7560">
+    <ele>8</ele>
+    <name>Sakuradamon Gate</name>
+  </wpt>
+  <wpt lat="35.6852" lon="139.7528">
+    <ele>17</ele>
+    <name>Imperial Palace</name>
+  </wpt>
+  <trk>
+    <name>Palace moat loop</name>
+    <trkseg>
+      <trkpt lat="35.6790" lon="139.7560"><ele>8</ele><time>2026-06-01T09:00:00Z</time></trkpt>
+      <trkpt lat="35.6798" lon="139.7592"><ele>7</ele><time>2026-06-01T09:03:00Z</time></trkpt>
+      <trkpt lat="35.6814" lon="139.7616"><ele>6</ele><time>2026-06-01T09:06:00Z</time></trkpt>
+      <trkpt lat="35.6840" lon="139.7630"><ele>5</ele><time>2026-06-01T09:09:00Z</time></trkpt>
+      <trkpt lat="35.6868" lon="139.7637"><ele>5</ele><time>2026-06-01T09:12:00Z</time></trkpt>
+      <trkpt lat="35.6896" lon="139.7637"><ele>5</ele><time>2026-06-01T09:15:00Z</time></trkpt>
+      <trkpt lat="35.6917" lon="139.7621"><ele>6</ele><time>2026-06-01T09:18:00Z</time></trkpt>
+      <trkpt lat="35.6932" lon="139.7592"><ele>8</ele><time>2026-06-01T09:21:00Z</time></trkpt>
+      <trkpt lat="35.6938" lon="139.7560"><ele>12</ele><time>2026-06-01T09:24:00Z</time></trkpt>
+      <trkpt lat="35.6932" lon="139.7527"><ele>16</ele><time>2026-06-01T09:27:00Z</time></trkpt>
+      <trkpt lat="35.6917" lon="139.7498"><ele>20</ele><time>2026-06-01T09:30:00Z</time></trkpt>
+      <trkpt lat="35.6893" lon="139.7480"><ele>24</ele><time>2026-06-01T09:33:00Z</time></trkpt>
+      <trkpt lat="35.6866" lon="139.7472"><ele>27</ele><time>2026-06-01T09:36:00Z</time></trkpt>
+      <trkpt lat="35.6838" lon="139.7472"><ele>26</ele><time>2026-06-01T09:39:00Z</time></trkpt>
+      <trkpt lat="35.6812" lon="139.7490"><ele>20</ele><time>2026-06-01T09:42:00Z</time></trkpt>
+      <trkpt lat="35.6796" lon="139.7516"><ele>14</ele><time>2026-06-01T09:45:00Z</time></trkpt>
+      <trkpt lat="35.6788" lon="139.7540"><ele>10</ele><time>2026-06-01T09:48:00Z</time></trkpt>
+      <trkpt lat="35.6790" lon="139.7560"><ele>8</ele><time>2026-06-01T09:51:00Z</time></trkpt>
+    </trkseg>
+  </trk>
+</gpx>
