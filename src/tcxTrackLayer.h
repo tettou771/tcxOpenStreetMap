@@ -27,7 +27,7 @@
 #include <memory>
 #include <vector>
 
-namespace tcx {
+namespace tcx::openstreetmap {
 
 class TrackLayer {
 public:
@@ -66,4 +66,14 @@ private:
     void rebuild(double zoom);
 };
 
-} // namespace tcx
+} // namespace tcx::openstreetmap
+
+// -----------------------------------------------------------------------------
+// Backward compatibility. The canonical namespace is now `tcx::openstreetmap`.
+// These silent aliases keep older code compiling: flat `tcx::Xxx` and legacy
+// `trussc::Xxx`. DEPRECATED — removed in v1.0.0.
+// (No [[deprecated]] attribute: under the usual `using namespace tc;` it would
+//  warn on idiomatic unqualified use too. See tcxOpenStreetMap README for migration.)
+// -----------------------------------------------------------------------------
+namespace tcx    { using openstreetmap::TrackLayer; } // deprecated: remove at v1.0.0
+namespace trussc { using tcx::openstreetmap::TrackLayer; } // deprecated: remove at v1.0.0

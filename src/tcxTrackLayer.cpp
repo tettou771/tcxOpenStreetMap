@@ -4,7 +4,7 @@
 
 using namespace tc;
 
-namespace tcx {
+namespace tcx::openstreetmap {
 
 // ---------------------------------------------------------------- data
 
@@ -92,4 +92,4 @@ void TrackLayer::draw(const MapView& map) {
     popMatrix();
 }
 
-} // namespace tcx
+} // namespace tcx::openstreetmap

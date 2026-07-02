@@ -13,7 +13,7 @@ namespace fs = std::filesystem;
 
 using namespace tc;
 
-namespace tcx {
+namespace tcx::openstreetmap {
 
 MapView::MapView() {
     // Default to OSM so an out-of-the-box new MapView shows something.
@@ -433,4 +433,4 @@ void MapView::evictOldTiles() {
     }
 }
 
-} // namespace tcx
+} // namespace tcx::openstreetmap

@@ -2,7 +2,7 @@
 
 using namespace tc;
 
-namespace tcx {
+namespace tcx::openstreetmap {
 
 void MapViewNode::setup() {
     enableEvents();
@@ -125,4 +125,4 @@ bool MapViewNode::onMouseRelease(Vec2 local, int button) {
     return RectNode::onMouseRelease(local, button);
 }
 
-} // namespace tcx
+} // namespace tcx::openstreetmap

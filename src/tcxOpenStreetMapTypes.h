@@ -14,7 +14,7 @@
 #include <cstddef>
 #include <cstdint>
 
-namespace tcx {
+namespace tcx::openstreetmap {
 
 // -----------------------------------------------------------------------------
 // TileKey — identifies one slippy-map tile (z = zoom level, x/y = tile index
@@ -78,4 +78,28 @@ inline LatLon worldPixelToLatLon(WorldPixel wp, double zoom) {
     return {lat, lon};
 }
 
-} // namespace tcx
+} // namespace tcx::openstreetmap
+
+// -----------------------------------------------------------------------------
+// Backward compatibility. The canonical namespace is now `tcx::openstreetmap`.
+// These silent aliases keep older code compiling: flat `tcx::Xxx` and legacy
+// `trussc::Xxx`. DEPRECATED — removed in v1.0.0.
+// (No [[deprecated]] attribute: under the usual `using namespace tc;` it would
+//  warn on idiomatic unqualified use too. See tcxOpenStreetMap README for migration.)
+// -----------------------------------------------------------------------------
+namespace tcx    { using openstreetmap::TileKey; } // deprecated: remove at v1.0.0
+namespace tcx    { using openstreetmap::TileKeyHash; } // deprecated: remove at v1.0.0
+namespace tcx    { using openstreetmap::WorldPixel; } // deprecated: remove at v1.0.0
+namespace tcx    { using openstreetmap::mercatorClampLat; } // deprecated: remove at v1.0.0
+namespace tcx    { using openstreetmap::latLonToWorldPixel; } // deprecated: remove at v1.0.0
+namespace tcx    { using openstreetmap::worldPixelToLatLon; } // deprecated: remove at v1.0.0
+namespace tcx    { using openstreetmap::TILE_SIZE_PX; } // deprecated: remove at v1.0.0
+namespace tcx    { using openstreetmap::MAX_LAT; } // deprecated: remove at v1.0.0
+namespace trussc { using tcx::openstreetmap::TileKey; } // deprecated: remove at v1.0.0
+namespace trussc { using tcx::openstreetmap::TileKeyHash; } // deprecated: remove at v1.0.0
+namespace trussc { using tcx::openstreetmap::WorldPixel; } // deprecated: remove at v1.0.0
+namespace trussc { using tcx::openstreetmap::mercatorClampLat; } // deprecated: remove at v1.0.0
+namespace trussc { using tcx::openstreetmap::latLonToWorldPixel; } // deprecated: remove at v1.0.0
+namespace trussc { using tcx::openstreetmap::worldPixelToLatLon; } // deprecated: remove at v1.0.0
+namespace trussc { using tcx::openstreetmap::TILE_SIZE_PX; } // deprecated: remove at v1.0.0
+namespace trussc { using tcx::openstreetmap::MAX_LAT; } // deprecated: remove at v1.0.0

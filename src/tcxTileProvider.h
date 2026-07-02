@@ -24,7 +24,7 @@
 #include <string>
 #include <vector>
 
-namespace tcx {
+namespace tcx::openstreetmap {
 
 // -----------------------------------------------------------------------------
 // Base interface — implementers return the URL for a given tile, plus an HTTP
@@ -115,4 +115,18 @@ private:
     int         maxZoom_ = 19;
 };
 
-} // namespace tcx
+} // namespace tcx::openstreetmap
+
+// -----------------------------------------------------------------------------
+// Backward compatibility. The canonical namespace is now `tcx::openstreetmap`.
+// These silent aliases keep older code compiling: flat `tcx::Xxx` and legacy
+// `trussc::Xxx`. DEPRECATED — removed in v1.0.0.
+// (No [[deprecated]] attribute: under the usual `using namespace tc;` it would
+//  warn on idiomatic unqualified use too. See tcxOpenStreetMap README for migration.)
+// -----------------------------------------------------------------------------
+namespace tcx    { using openstreetmap::TileProvider; } // deprecated: remove at v1.0.0
+namespace tcx    { using openstreetmap::OSMTileProvider; } // deprecated: remove at v1.0.0
+namespace tcx    { using openstreetmap::UrlTemplateTileProvider; } // deprecated: remove at v1.0.0
+namespace trussc { using tcx::openstreetmap::TileProvider; } // deprecated: remove at v1.0.0
+namespace trussc { using tcx::openstreetmap::OSMTileProvider; } // deprecated: remove at v1.0.0
+namespace trussc { using tcx::openstreetmap::UrlTemplateTileProvider; } // deprecated: remove at v1.0.0

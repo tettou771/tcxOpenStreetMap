@@ -7,7 +7,7 @@
 #include <cmath>
 #include <cstring>
 
-namespace tcx {
+namespace tcx::openstreetmap {
 
 // ---------------------------------------------------------------- helpers
 
@@ -189,4 +189,4 @@ double NominatimClient::zoomForBoundingBox(const GeocodingResult& r,
     return 13.0;
 }
 
-} // namespace tcx
+} // namespace tcx::openstreetmap
