@@ -19,3 +19,7 @@ jobs:
   # tests/ directory to opt into behavioral tests (see the README).
   build:
     uses: TrussC-org/ci-actions/.github/workflows/build-addon.yml@v1
+    with:
+      # tcxOpenStreetMap depends on tcxGeo (separate, non-bundled repo).
+      # tcxCurl is bundled with TrussC, so only tcxGeo needs cloning here.
+      extra_addons: "tettou771/tcxGeo tcxGeo"

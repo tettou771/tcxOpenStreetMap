@@ -15,7 +15,6 @@ static double zoomToFit(LatLon sw, LatLon ne, float viewW, float viewH) {
 
 void tcApp::setup() {
     // Inert without TRUSSC_MCP=1 — lets an agent drive pan/zoom for verification.
-    mcp::enableDebugger();
     mcp::registerDebuggerTools();
 
     setupMap();
