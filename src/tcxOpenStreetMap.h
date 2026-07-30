@@ -22,6 +22,7 @@
 #include <tcxGeo.h>                  // LatLon, distance/bearing, GPX (tcxGeo addon)
 
 #include "tcxOpenStreetMapTypes.h"   // TileKey, Web Mercator projection helpers
+#include "tcxTileJson.h"             // TileJsonDoc, parseTileJson, attributionText
 #include "tcxTileProvider.h"         // OSMTileProvider, UrlTemplateTileProvider
 #include "tcxMapView.h"              // MapView
 #include "tcxMapViewNode.h"          // MapViewNode

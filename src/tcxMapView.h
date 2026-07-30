@@ -52,6 +52,13 @@ public:
     int    maxZoomLimit() const { return maxZoom_; }
     MapView& setZoomLimits(int minZ, int maxZ) { minZoom_ = minZ; maxZoom_ = maxZ; return *this; }
 
+    // The zoom range that actually has imagery: this view's own limits
+    // intersected with what the provider serves. setZoom() clamps to these
+    // rather than to maxZoom_ alone — zooming somewhere the source has no tiles
+    // is not a zoom, it is a blank map.
+    int sourceMinZoom() const;
+    int sourceMaxZoom() const;
+
     // -------------------------------------------------------------- projection
     // Origin = top-left of the (sizeW_ x sizeH_) viewport. caller's drawTiles()
     // translates from its own coordinate space before invoking us.
@@ -69,8 +76,17 @@ public:
     MapView& zoomBy(double dZoom, tc::Vec2 anchorPx);    // anchored on a pixel
 
     // ----------------------------------------------------------- tile provider
+    // Set before the first update() / drawTiles(), or while no tiles are in
+    // flight: the tile worker reads provider_ unsynchronised, so swapping the
+    // pointer under a running worker is a race. Reconfiguring a provider in
+    // place (TileJsonTileProvider::fetchAsync) is safe at any time.
     MapView& setTileProvider(std::shared_ptr<TileProvider> p) { provider_ = std::move(p); return *this; }
     std::shared_ptr<TileProvider> tileProvider() const { return provider_; }
+
+    // Credit line the current provider requires. Passed straight through —
+    // where and how it is drawn stays the application's decision, since only it
+    // knows the layout. May contain HTML (attributionText() strips it).
+    std::string attribution() const;
 
     // Disk tile cache. Defaults to the OS user-cache dir (see defaultTileCacheDir),
     // because the OSM tile-usage policy explicitly asks consumers to cache and

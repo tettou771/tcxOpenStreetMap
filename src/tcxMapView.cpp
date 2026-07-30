@@ -69,7 +69,30 @@ MapView& MapView::setCenter(LatLon p) {
     return *this;
 }
 
+// Two different ceilings, and conflating them was a bug: maxZoom_ is how far
+// the user may zoom, while the provider's maxZoom() is the deepest level that
+// actually has tiles. OSM stops at 19; asking it for 20+ returns 404s forever.
+int MapView::sourceMaxZoom() const {
+    return provider_ ? std::min(maxZoom_, provider_->maxZoom()) : maxZoom_;
+}
+
+int MapView::sourceMinZoom() const {
+    const int lo = provider_ ? std::max(minZoom_, provider_->minZoom()) : minZoom_;
+    // A provider whose floor sits above this view's ceiling would give an empty
+    // range; keep the ceiling authoritative so clamp() stays well-formed.
+    return std::min(lo, sourceMaxZoom());
+}
+
+std::string MapView::attribution() const {
+    return provider_ ? provider_->attribution() : std::string{};
+}
+
 MapView& MapView::setZoom(double z) {
+    // Clamped to the VIEW's limits, deliberately not to the provider's. The two
+    // ceilings mean different things: past the source's deepest level drawTiles()
+    // keeps rendering by upscaling, which is how a caller zooms in closer than
+    // any tile exists for (a 10 m field of view needs ~z22 against OSM's z19).
+    // Clamping here would silently cap that.
     zoom_ = std::clamp(z, (double)minZoom_, (double)maxZoom_);
     return *this;
 }
@@ -164,13 +187,20 @@ void MapView::drawTiles() {
     fill();
     drawRect(0, 0, sizeW_, sizeH_);
 
+    // Cap the SOURCE zoom rather than refuse to draw, and over-zoom comes for
+    // free: tileScale below is already 2^(zoom_ - intZoom), so a request to
+    // render at z23 from z19 tiles simply draws them 16x larger. Same pixels a
+    // deeper tile would have covered, no requests for things that do not exist.
+    const int srcMaxZoom = sourceMaxZoom();
+    const int srcMinZoom = sourceMinZoom();
+
     // Pick which integer tile zoom to render. zoomSnap_ controls *when* the
     // fractional zoom crosses to the next detail level — 0.5 = standard
     // rounding, >0.5 stays on coarse longer (fewer downloads).
     double zlo = std::floor(zoom_);
     int    intZoom = std::clamp(
         (int)((zoom_ - zlo >= zoomSnap_) ? (zlo + 1.0) : zlo),
-        minZoom_, maxZoom_);
+        srcMinZoom, srcMaxZoom);
     double tileScale = std::pow(2.0, zoom_ - intZoom);
     double tileSize  = TILE_SIZE_PX * tileScale;
 
@@ -234,7 +264,7 @@ void MapView::drawTiles() {
             // are loaded. Each child fills a quadrant of our draw rect.
             // Limited to +1 because +2 = 16 lookups per missing tile and the
             // visual gain past one level is small.
-            if (!drewFallback && intZoom < maxZoom_) {
+            if (!drewFallback && intZoom < srcMaxZoom) {
                 int cz   = intZoom + 1;
                 int cxB  = tx * 2;
                 int cyB  = ty * 2;
@@ -265,8 +295,8 @@ void MapView::drawTiles() {
     }
 
     if (prefetchNeighbors_) {
-        if (intZoom + 1 <= maxZoom_) prefetchZoomLevel(intZoom + 1);
-        if (intZoom - 1 >= minZoom_) prefetchZoomLevel(intZoom - 1);
+        if (intZoom + 1 <= srcMaxZoom) prefetchZoomLevel(intZoom + 1);
+        if (intZoom - 1 >= srcMinZoom) prefetchZoomLevel(intZoom - 1);
     }
 }
 

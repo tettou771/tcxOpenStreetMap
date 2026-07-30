@@ -24,6 +24,7 @@ Depends on `tcxCurl` (auto-resolved by `trusscli addon clone`).
 | `tcx::MapView` | Node-agnostic core. Lat/lon ↔ pixel projection, viewport math, tile cache + worker, `drawTiles()` at the current draw cursor. Compose into any draw routine. |
 | `tcx::MapViewNode : RectNode` | Drop into the scene graph. Built-in left-drag pan, scroll zoom, and pins-as-Nodes. The recommended starting point. |
 | `tcx::OSMTileProvider` / `tcx::UrlTemplateTileProvider` | Swappable tile source. OSM default; URL-template covers Mapbox / OpenTopoMap / self-hosted. |
+| `tcx::TileJsonTileProvider` | A tile source configured by a [TileJSON](https://github.com/mapbox/tilejson-spec) document — URL templates, zoom range and attribution in one document instead of three places in your code. `OSMTileProvider` is this class preloaded with the document OSM publishes. |
 | `tcx::NominatimClient` | Geocoding (place name ↔ lat/lon) via OSM Nominatim. Sync + async, with built-in 1-req/sec throttle per the public-server policy. |
 
 ## Quick start
@@ -153,6 +154,9 @@ If you publish an app that uses `OSMTileProvider`, please:
    impractical. Map data is licensed under the
    [ODbL](https://www.openstreetmap.org/copyright) and attribution is a
    condition of use, not a courtesy.
+   Read it from `map.attribution()` rather than hardcoding it, so it follows
+   the tile source if you swap providers. It contains HTML (OSM's is a link);
+   `attributionText()` strips the tags for bitmap-font overlays.
 2. Set `setUserAgent(...)` to something that identifies your app.
 3. Keep disk caching on (it is by default — see above).
 4. Stay within OpenStreetMap's tile-usage policy:
