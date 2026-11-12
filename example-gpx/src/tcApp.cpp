@@ -14,8 +14,8 @@ static double zoomToFit(LatLon sw, LatLon ne, float viewW, float viewH) {
 }
 
 void tcApp::setup() {
-    // Inert without TRUSSC_MCP=1 — lets an agent drive pan/zoom for verification.
-    mcp::registerDebuggerTools();
+    // An agent can drive pan/zoom for verification in a dev build
+    // (`trusscli run --mcp` grants Control). A normal run stays inert.
 
     setupMap();
 
